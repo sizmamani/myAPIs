@@ -10,6 +10,7 @@ describe('GET /', () => {
             .get('/')
             .expect(200)
             .expect((res) => {
+                expect(res.body).toEqual({});
                 expect(res.text).toBe('Happy Coding!!!');
             })
             .end(done);
