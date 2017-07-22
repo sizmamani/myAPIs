@@ -15,6 +15,12 @@ app.use(bodyParser.text());
 app.get('/', (req, res) => {
     res.send('Happy Coding!!!');
 });
+
+app.post('/login', (req, res) => {
+    let {username, password} = _.pick(req.body, ["username", "password"]);
+    
+    res.send('Received');
+});
  
  
 app.listen(port, () => console.log(`Server started and listening to Port ${port}`));
