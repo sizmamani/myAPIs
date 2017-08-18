@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 const _ = require('lodash');
+var { mongoose } = require('../db/mongoose.js');
+const { ObjectID } = require('mongodb');
+
 
 /**
  * @api {POST} /api/v2/login Simple Login
@@ -47,7 +50,7 @@ const _ = require('lodash');
  * }
  */
 router.post('/login', (req, res) => {
-    let {username, password} = _.pick(req.body, ["username", "password"]);
+    let { username, password } = _.pick(req.body, ["username", "password"]);
     res.send('Received');
 });
 
@@ -79,7 +82,7 @@ router.post('/login', (req, res) => {
  * }
  */
 router.post('/forgot-password', (req, res) => {
-    let {username} = _.pick(req.body, ["username"]);
+    let { username } = _.pick(req.body, ["username"]);
     res.send('Received');
 });
 
@@ -133,7 +136,7 @@ router.post('/forgot-password', (req, res) => {
  * }
  */
 router.post('/signup', (req, res) => {
-    let {name, username, password} = _.pick(req.body, ["name", "username", "password"]);
+    let { name, username, password } = _.pick(req.body, ["name", "username", "password"]);
     res.send('Received');
 });
 
