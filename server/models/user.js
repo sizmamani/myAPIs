@@ -6,13 +6,19 @@ const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
     //Define the schema of your document
-    name: {
+    firstname: {
         type: String,
         required: true,
         trim: true,
         minlength: 1
     },
-    email: {
+    lastname: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 1
+    },
+    loginId: {
         type: String,
         required: true,
         trim: true,
@@ -29,12 +35,40 @@ var UserSchema = new mongoose.Schema({
         required: true,
         minlength: 6
     },
+    email: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 5,
+        validate: {
+            validator: (value) => {
+                return validator.isEmail(value);
+            },
+            message: '{VALUE} is not a valid email'
+        }
+    },
+    position: {
+        type: String,
+        minlength: 1
+    },
     status: {
         type: String,
         required: true,
         minlength: 1
     },
-    interests: {
+    myInterests: {
+        type: String,
+        minlength: 1
+    },
+    myExpertise: {
+        type: String,
+        minlength: 1
+    },
+    aboutMe: {
+        type: String,
+        minlength: 1
+    },
+    comingFrom: {
         type: String,
         minlength: 1
     },
@@ -42,22 +76,45 @@ var UserSchema = new mongoose.Schema({
         type: String,
         minlength: 1
     },
-    image: {
+    userProfileVirtualPath: {
         type: String,
         minlength: 1
     },
-    tokens: [{
-        access: {
-            type: String,
-            required: true
-        },
-        token: {
-            type: String,
-            required: true
-        }
-    }]
+    dtLastLogin: {
+        type: Date
+    },
+    loginNo: {
+        type: Number
+    },
+    dtCreated: {
+        type: Date
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    },
+    dtUpdated: {
+        type: Date
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    }
+    // tokens: [{
+    //     access: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     token: {
+    //         type: String,
+    //         required: true
+    //     }
+    // }]
 });
 
+/**
+	private Long languageId;
+ */
 //Define both Model and Instance methods of this model here
 
 

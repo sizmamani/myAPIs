@@ -205,10 +205,49 @@ router.post('/signup', (req, res) => {
  *  }
  * }
  */
-router.get('/login/google',
-    passport.authenticate('google', { scope: google.scope }));
+router.get('/login/google', passport.authenticate('google', { scope: google.scope }));
 
-    router.get('/google/callback',
+/**
+ * @api {GET} /api/v2/signup/google Google Signup
+ * @apiGroup Authentication
+ * @apiVersion 2.0.0
+ * @apiName GoogleSignup
+ * @apiDescription This API is used for Google Signup
+ * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
+ * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  //If user already exists in our system
+ *  "user": {
+ *      //LOGGED IN USER DETAILS
+ *      },
+ *  "communities": [{
+ *      //USER'S FIRTS COMMUNITY
+ *  }, {
+ *      //USER'S SECOND COMMUNITY
+ *  }]
+ * }
+ * @apiSuccessExample {string} Success-Response-Header:
+ * token: STRING_OF_TOKEN 
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
+router.get('/signup/google', passport.authenticate('google', { scope: google.scope }));
+
+
+
+
+
+router.get('/google/callback',
     passport.authenticate('google', {
         failureRedirect: '/failed'
     }),
@@ -253,6 +292,41 @@ router.get('/login/google',
  */
 router.get('/login/facebook', passport.authenticate('facebook'));
 
+/**
+ * @api {GET} /api/v2/signup/facebook Facebook Signup
+ * @apiGroup Authentication
+ * @apiVersion 2.0.0
+ * @apiName FacebookSignup
+ * @apiDescription This API is used for Facebook Signup
+ * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
+ * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  //If user already exists in our system
+ *  "user": {
+ *      //LOGGED IN USER DETAILS
+ *      },
+ *  "communities": [{
+ *      //USER'S FIRTS COMMUNITY
+ *  }, {
+ *      //USER'S SECOND COMMUNITY
+ *  }]
+ * }
+ * @apiSuccessExample {string} Success-Response-Header:
+ * token: STRING_OF_TOKEN 
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
+router.get('/signup/facebook', passport.authenticate('facebook'));
 
 router.get('/facebook/callback',
     passport.authenticate('facebook', {
