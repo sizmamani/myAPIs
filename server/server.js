@@ -7,8 +7,8 @@ const homeRoute = require('./routes/index');
 const authenticationRoute = require('./routes/authentication');
 
 var app = express();
-const port = process.env.PORT;
 
+const port = process.env.PORT;
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 

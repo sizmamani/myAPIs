@@ -3,7 +3,37 @@ var router = express.Router();
 const _ = require('lodash');
 var { mongoose } = require('../db/mongoose.js');
 const { ObjectID } = require('mongodb');
+const passport = require('passport');
+const googleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const fbStrategy = require('passport-facebook').Strategy;
+const { google, facebook } = require('../config/auth-config');
 
+passport.serializeUser(function (user, done) {
+    done(null, user);
+});
+
+passport.deserializeUser(function (user, done) {
+    done(null, user);
+});
+
+router.use(passport.initialize());
+passport.use(new googleStrategy({
+    clientID: google.clientID,
+    clientSecret: google.clientSecret,
+    callbackURL: google.callbackURL
+}, function (accessToken, freshToken, profile, cb) {
+    return cb(null, profile);
+}));
+
+
+passport.use(new fbStrategy({
+    clientID: facebook.clientID,
+    clientSecret: facebook.clientSecret,
+    callbackURL: facebook.callbackURL,
+    profileFields: facebook.profileFields
+}, function (accessToken, freshToken, profile, cb) {
+    return cb(null, profile);
+}));
 
 /**
  * @api {POST} /api/v2/login Simple Login
@@ -139,5 +169,98 @@ router.post('/signup', (req, res) => {
     let { name, username, password } = _.pick(req.body, ["name", "username", "password"]);
     res.send('Received');
 });
+
+
+/**
+ * @api {GET} /api/v2/login/google Google Login
+ * @apiGroup Authentication
+ * @apiVersion 2.0.0
+ * @apiName GoogleLogin
+ * @apiDescription This API is used for Google Login
+ * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
+ * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  "user": {
+ *      //LOGGED IN USER DETAILS
+ *      },
+ *  "communities": [{
+ *      //USER'S FIRTS COMMUNITY
+ *  }, {
+ *      //USER'S SECOND COMMUNITY
+ *  }]
+ * }
+ * @apiSuccessExample {string} Success-Response-Header:
+ * token: STRING_OF_TOKEN 
+ * @apiError (401) {json} NO_ACCOUNT user email not found
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
+router.get('/login/google',
+    passport.authenticate('google', { scope: google.scope }));
+
+    router.get('/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: '/failed'
+    }),
+    (req, res) => {
+        res.json(req.user._json);
+    }
+);
+
+/**
+ * @api {GET} /api/v2/login/facebook Facebook Login
+ * @apiGroup Authentication
+ * @apiVersion 2.0.0
+ * @apiName FacebookLogin
+ * @apiDescription This API is used for Facebook Login
+ * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
+ * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  "user": {
+ *      //LOGGED IN USER DETAILS
+ *      },
+ *  "communities": [{
+ *      //USER'S FIRTS COMMUNITY
+ *  }, {
+ *      //USER'S SECOND COMMUNITY
+ *  }]
+ * }
+ * @apiSuccessExample {string} Success-Response-Header:
+ * token: STRING_OF_TOKEN 
+ * @apiError (401) {json} NO_ACCOUNT user email not found
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
+router.get('/login/facebook', passport.authenticate('facebook'));
+
+
+router.get('/facebook/callback',
+    passport.authenticate('facebook', {
+        failureRedirect: '/failed'
+    }),
+    (req, res) => {
+        res.json(req.user._json);
+    }
+);
 
 module.exports = router;
