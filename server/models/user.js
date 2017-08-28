@@ -5,14 +5,13 @@ const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
-    //Define the schema of your document
-    firstname: {
+    firstName: {
         type: String,
         required: true,
         trim: true,
         minlength: 1
     },
-    lastname: {
+    lastName: {
         type: String,
         required: true,
         trim: true,
@@ -35,25 +34,25 @@ var UserSchema = new mongoose.Schema({
         required: true,
         minlength: 6
     },
-    email: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 5,
-        validate: {
-            validator: (value) => {
-                return validator.isEmail(value);
-            },
-            message: '{VALUE} is not a valid email'
-        }
-    },
+    // email: {
+    //     type: String,
+    //     required: true,
+    //     trim: true,
+    //     minlength: 5,
+    //     validate: {
+    //         validator: (value) => {
+    //             return validator.isEmail(value);
+    //         },
+    //         message: '{VALUE} is not a valid email'
+    //     }
+    // },
     position: {
         type: String,
         minlength: 1
     },
     status: {
         type: String,
-        required: true,
+        //required: true,
         minlength: 1
     },
     myInterests: {
@@ -91,14 +90,14 @@ var UserSchema = new mongoose.Schema({
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'User'
     },
     dtUpdated: {
         type: Date
     },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'User'
     }
     // tokens: [{
     //     access: {
@@ -115,10 +114,76 @@ var UserSchema = new mongoose.Schema({
 /**
 	private Long languageId;
  */
-//Define both Model and Instance methods of this model here
 
+UserSchema.methods.toJSON = function () {
+    var user = this;
+    var userObject = user.toObject();
+ 
+    return _.pick(userObject, ['_id', 'firstName', 'lastName', 'loginId', 
+        'position', 'status', 'myInterests', 'myExpertise', 'aboutMe', 
+        'comingFrom', 'gender', 'userProfileVirtualPath', 'dtLastLogin', 'loginNo',
+        'dtCreated', 'createdBy', 'dtUpdated', 'updatedBy']);
+};
 
-//Define your database event schema here: i.e. pre. before saving the details into the db
+UserSchema.methods.generateAuthToken = function () {
+    var user = this;
+    var token = jwt.sign({
+        _id: user._id.toHexString()
+    }, process.env.JWT_SECRET).toString();
+ 
+    return new Promise((resolve, reject) => {
+        if(token){
+            resolve(token);
+        }else{
+            reject();
+        }
+    })
+};
+
+UserSchema.statics.findByLoginId = function (loginId) {
+    var User = this;
+    return User.findOne({
+        loginId
+    });
+};
+
+UserSchema.statics.findByCredentials = function (email, password) {
+    var User = this;
+    return User.findOne({ email }).then((user) => {
+        if (!user) {
+            return Promise.reject();
+        }
+ 
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, res) => {
+                if(res){
+                    resolve(user);
+                }else{
+                    reject();
+                }
+            });
+        }
+        );
+    });
+};
+
+UserSchema.pre('save', function (next) {
+    var user = this;
+    if (user.isModified('password')) {
+        bcrypt.genSalt(10, (err, salt) => {
+            if (salt) {
+                bcrypt.hash(user.password, salt, (err, hash) => {
+                    if (hash) {
+                        user.password = hash;
+                        next();
+                    }
+                })
+            }
+        });
+    } else {
+        next();
+    }
+});
 
 var User = mongoose.model('User', UserSchema);
 module.exports = {

@@ -7,6 +7,7 @@ const passport = require('passport');
 const googleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const fbStrategy = require('passport-facebook').Strategy;
 const { google, facebook } = require('../config/auth-config');
+const { User } = require('../models/user');
 
 passport.serializeUser(function (user, done) {
     done(null, user);
@@ -152,6 +153,7 @@ router.post('/forgot-password', (req, res) => {
  * @apiSuccessExample {string} Success-Response-Header:
  * token: STRING_OF_TOKEN 
  * @apiError (401) {json} WRONG_EMAIL username was wrong
+ * @apiError (401) {json} EXISTING_EMAIL username already exists
  * @apiError (401) {json} EMPTY_NAME name was empty
  * @apiError (401) {json} BAD_PASSWORD password did not follow the policy
  * @apiError (404) {json} PAGE_NOT_FOUND check the URL
@@ -166,8 +168,29 @@ router.post('/forgot-password', (req, res) => {
  * }
  */
 router.post('/signup', (req, res) => {
-    let { name, username, password } = _.pick(req.body, ["name", "username", "password"]);
-    res.send('Received');
+    let body = _.pick(req.body, ['firstName', 'lastName', 'loginId', 'password']);
+    User.findByLoginId(body.loginId)
+        .then((user) => {
+            if (user) {
+                return res.status(401).send({
+                    error: {
+                        code: 1000,
+                        message: 'User Already Exists'
+                    }
+                });
+            } else {
+                let user = new User(body);
+                user.save().then(() => {
+                    return user.generateAuthToken()
+                }).then((token) => {
+                    if (user && token) {
+                        return res.header('token', token).send({ user });
+                    }
+                })
+            }
+        }).catch((err) => {
+
+        });
 });
 
 
