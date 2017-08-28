@@ -4,6 +4,8 @@ const { ObjectID } = require('mongodb');
 
 const { app } = require('./../server');
 
+const URL = '/api/v2';
+
 describe('GET /', () => {
     it('should return simple text', (done) => {
         request(app)

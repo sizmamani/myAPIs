@@ -1,13 +1,15 @@
 var express = require('express');
-var router = express.Router();
+const validator = require('validator');
 const _ = require('lodash');
-var { mongoose } = require('../db/mongoose.js');
 const { ObjectID } = require('mongodb');
 const passport = require('passport');
 const googleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const fbStrategy = require('passport-facebook').Strategy;
 const { google, facebook } = require('../config/auth-config');
+var { mongoose } = require('../db/mongoose.js');
 const { User } = require('../models/user');
+const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/messageUtil');
+var router = express.Router();
 
 passport.serializeUser(function (user, done) {
     done(null, user);
@@ -42,14 +44,14 @@ passport.use(new fbStrategy({
  * @apiVersion 2.0.0
  * @apiName SimpleLogin
  * @apiDescription This API is used for simple login by username and password
- * @apiParam {string} username username of the user
- * @apiParam {string} passport password of the user
+ * @apiParam {string} loginId loginId of the user
+ * @apiParam {string} password password of the user
  * @apiHeader {string} Content-Type value should be <code>application/json</code>
  * @apiHeaderExample {string} Header-Example:
  * "Content-Type":"application/json"
  * @apiParamExample {json} Request-Sample:
  * {
- *  "username": "user@test.com",
+ *  "loginId": "user@test.com",
  *  "password": "123456"
  * }
  * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
@@ -58,8 +60,11 @@ passport.use(new fbStrategy({
  * @apiSuccessExample {json} Success-Response-Body:
  * {
  *  "user": {
- *      //LOGGED IN USER DETAILS
- *      },
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com"
+ *  },
  *  "communities": [{
  *      //USER'S FIRTS COMMUNITY
  *  }, {
@@ -81,8 +86,25 @@ passport.use(new fbStrategy({
  * }
  */
 router.post('/login', (req, res) => {
-    let { username, password } = _.pick(req.body, ["username", "password"]);
-    res.send('Received');
+    let { loginId, password } = _.pick(req.body, ["loginId", "password"]);
+    if (!validator.isEmpty(loginId) &&
+        !validator.isEmpty(password) &&
+        !validator.isEmail(loginId)) {
+        //loginId or password are empty or loginId is not email
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.WRONG_CREDENTIALS);
+    } else {
+        User.findByCredentials(loginId, password)
+            .then((user) => {
+                if (user) {
+                    return res.send({ user });
+                } else {
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.WRONG_CREDENTIALS);
+                }
+            })
+            .catch((err) => {
+                return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.WRONG_CREDENTIALS);
+            })
+    }
 });
 
 
@@ -92,15 +114,21 @@ router.post('/login', (req, res) => {
  * @apiVersion 2.0.0
  * @apiName ForgotPassword
  * @apiDescription This API is used for Forgot Password
- * @apiParam {string} username username of the user
+ * @apiParam {string} loginId loginId of the user
  * @apiHeader {string} Content-Type value should be <code>application/json</code>
  * @apiHeaderExample {string} Header-Example:
  * "Content-Type":"application/json"
  * @apiParamExample {json} Request-Sample:
  * {
- *  "username": "user@test.com"
+ *  "loginId": "user@test.com"
  * }
- * @apiError (401) {json} WRONG_EMAIL username was wrong
+ * @apiSuccess (Success-Response-body) {json} message Email was sent to you. Please check your email
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  "message": 'Email was sent to you. Please check your email'
+ * }
+ * @apiError (401) {json} WRONG_EMAIL EMAIL SHOULD BE PROVIDED
+ * @apiError (401) {json} NO_ACCOUNT ACCOUNT DOES NOT EXIST
  * @apiError (404) {json} PAGE_NOT_FOUND check the URL
  * @apiError (500) {json} NETWROK_ISSUE check the network
  * 
@@ -113,8 +141,20 @@ router.post('/login', (req, res) => {
  * }
  */
 router.post('/forgot-password', (req, res) => {
-    let { username } = _.pick(req.body, ["username"]);
-    res.send('Received');
+    let { loginId } = _.pick(req.body, ["loginId"]);
+    if (!validator.isEmail(loginId)) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.WRONG_EMAIL_FORMAT);
+    } else {
+        User.findByLoginId(loginId)
+            .then((user) => {
+                if (user) {
+                    //Send email to the user
+                    return res.send(MESSAGES.EMAIL_SENT_TO_USER);
+                } else {
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NO_ACCOUNT);
+                }
+            })
+    }
 });
 
 
@@ -124,16 +164,18 @@ router.post('/forgot-password', (req, res) => {
  * @apiVersion 2.0.0
  * @apiName SignUp
  * @apiDescription This API is used for Simple Sign Up
- * @apiParam {string} name name of the user
- * @apiParam {string} username username of the user
+ * @apiParam {string} firstName First Name of the user
+ * @apiParam {string} lastName Last Name of the user
+ * @apiParam {string} loginId loginId of the user
  * @apiParam {string} password password of the user
  * @apiHeader {string} Content-Type value should be <code>application/json</code>
  * @apiHeaderExample {string} Header-Example:
  * "Content-Type":"application/json"
  * @apiParamExample {json} Request-Sample:
  * {
- *  "name": "user",
- *  "username": "user@test.com",
+ *  "firstName": "John",
+ *  "lastName": "Smith",
+ *  "loginId": "john-smith@test.com",
  *  "password": "123456"
  * }
  * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
@@ -152,10 +194,11 @@ router.post('/forgot-password', (req, res) => {
  * }
  * @apiSuccessExample {string} Success-Response-Header:
  * token: STRING_OF_TOKEN 
- * @apiError (401) {json} WRONG_EMAIL username was wrong
- * @apiError (401) {json} EXISTING_EMAIL username already exists
- * @apiError (401) {json} EMPTY_NAME name was empty
- * @apiError (401) {json} BAD_PASSWORD password did not follow the policy
+ * @apiError (401) {json} WRONG_EMAIL EMAIL SHOULD BE PROVIDED
+ * @apiError (401) {json} EXISTING_EMAIL ACCOUNT ALREADY EXISTS
+ * @apiError (401) {json} EMPTY_FIRST_NAME FIRST NAME SHOULD NOT BE EMPTY
+ * @apiError (401) {json} EMPTY_LAST_NAME LAST NAME SHOULD NOT BE EMPTY
+ * @apiError (401) {json} BAD_PASSWORD PASSWORD SHOULD BE AT LEAST 6 CHARACTERS
  * @apiError (404) {json} PAGE_NOT_FOUND check the URL
  * @apiError (500) {json} NETWROK_ISSUE check the network
  * 
@@ -167,30 +210,38 @@ router.post('/forgot-password', (req, res) => {
  *  }
  * }
  */
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
     let body = _.pick(req.body, ['firstName', 'lastName', 'loginId', 'password']);
-    User.findByLoginId(body.loginId)
-        .then((user) => {
-            if (user) {
-                return res.status(401).send({
-                    error: {
-                        code: 1000,
-                        message: 'User Already Exists'
-                    }
-                });
-            } else {
-                let user = new User(body);
-                user.save().then(() => {
-                    return user.generateAuthToken()
-                }).then((token) => {
-                    if (user && token) {
-                        return res.header('token', token).send({ user });
-                    }
-                })
+    if (!validator.isEmpty(body.firstName) && !validator.isEmpty(body.lastName) &&
+        !validator.isEmpty(body.loginId) && !validator.isEmpty(body.password) &&
+        validator.isEmail(body.loginId) && body.password.length >= 6) {
+            try{
+                const user = new User(body);
+                user.status = 1;
+                user.email = body.loginId;
+                await user.save();
+                const token = await user.generateAuthToken();
+                return res.header('token', token).send({ user });
             }
-        }).catch((err) => {
+            catch(err){
+                return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.ACCOUNT_ALREADY_EXISTS);
+            }
 
-        });
+    }else{
+        if(validator.isEmpty(body.firstName)){
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.FIRST_NAME_EMPTY);
+        }
+        if(validator.isEmpty(body.lastName)){
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.LAST_NAME_EMPTY);
+        }
+        if(validator.isEmpty(body.password) || body.password.length < 6){
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.BAD_PASSWORD_FORMAT);
+        }
+        if(validator.isEmpty(body.loginId) || !validator.isEmail(body.loginId)){
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.WRONG_EMAIL_FORMAT);
+        }
+    }
+    return res.status(RESPONSE_CODES.NOT_FOUND).send(ERRORS.UNKNOW_ERROR);
 });
 
 

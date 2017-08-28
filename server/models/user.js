@@ -20,6 +20,7 @@ var UserSchema = new mongoose.Schema({
     loginId: {
         type: String,
         required: true,
+        unique: true,
         trim: true,
         minlength: 5,
         validate: {
@@ -34,34 +35,32 @@ var UserSchema = new mongoose.Schema({
         required: true,
         minlength: 6
     },
-    // email: {
-    //     type: String,
-    //     required: true,
-    //     trim: true,
-    //     minlength: 5,
-    //     validate: {
-    //         validator: (value) => {
-    //             return validator.isEmail(value);
-    //         },
-    //         message: '{VALUE} is not a valid email'
-    //     }
-    // },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        minlength: 5,
+        validate: {
+            validator: (value) => {
+                return validator.isEmail(value);
+            },
+            message: '{VALUE} is not a valid email'
+        }
+    },
     position: {
         type: String,
         minlength: 1
     },
     status: {
-        type: String,
-        //required: true,
-        minlength: 1
+        type: Number,
+        required: true
     },
     myInterests: {
-        type: String,
-        minlength: 1
+        type: Array
     },
     myExpertise: {
-        type: String,
-        minlength: 1
+        type: Array
     },
     aboutMe: {
         type: String,
@@ -72,8 +71,7 @@ var UserSchema = new mongoose.Schema({
         minlength: 1
     },
     gender: {
-        type: String,
-        minlength: 1
+        type: Number
     },
     userProfileVirtualPath: {
         type: String,
@@ -147,9 +145,9 @@ UserSchema.statics.findByLoginId = function (loginId) {
     });
 };
 
-UserSchema.statics.findByCredentials = function (email, password) {
+UserSchema.statics.findByCredentials = function (loginId, password) {
     var User = this;
-    return User.findOne({ email }).then((user) => {
+    return User.findOne({ loginId }).then((user) => {
         if (!user) {
             return Promise.reject();
         }

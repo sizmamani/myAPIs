@@ -1,7 +1,7 @@
 {
     "test": {
         "PORT": 3000,
-        "MONGODB_URI": "mongodb://localhost:27017/MyNeighbyTestDB",
+        "MONGODB_URI": "mongodb://localhost:27017/MyNeighbyTest",
         "JWT_SECRET": "alksdasfhudsdfrtgyhujhgfdswdfghnjmhgfdesw4deftgbhnjmnhg235433454y5rhtgfghu"
     },
     "development": {
