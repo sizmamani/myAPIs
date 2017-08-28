@@ -241,7 +241,6 @@ router.post('/signup', async (req, res) => {
             return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.WRONG_EMAIL_FORMAT);
         }
     }
-    return res.status(RESPONSE_CODES.NOT_FOUND).send(ERRORS.UNKNOW_ERROR);
 });
 
 
@@ -323,10 +322,32 @@ router.get('/signup/google', passport.authenticate('google', { scope: google.sco
 
 router.get('/google/callback',
     passport.authenticate('google', {
-        failureRedirect: '/failed'
+        failureRedirect: '/oauth-failed'
     }),
-    (req, res) => {
-        res.json(req.user._json);
+    async (req, res) => {
+        //If account does not exist then sign up
+        if(req.user){
+            let email = req.user._json.emails[0].value;
+            if(validator.isEmail(email)){
+                let user = await User.findByLoginId(email);
+                if(user){
+                    return res.send({user});
+                }else{
+                    let firstName = req.user._json.name.givenName;
+                    let lastName = req.user._json.name.familyName;
+                    user = new User({
+                        firstName,
+                        lastName,
+                        email,
+                        loginId: email,
+                        status: 1
+                    });
+                    await user.save();
+                    const token = await user.generateAuthToken();
+                    return res.header('token', token).send({user});
+                }
+            }
+        }
     }
 );
 
@@ -406,8 +427,32 @@ router.get('/facebook/callback',
     passport.authenticate('facebook', {
         failureRedirect: '/failed'
     }),
-    (req, res) => {
-        res.json(req.user._json);
+    async (req, res) => {
+        //If account does not exist then sign up
+        if(req.user){
+            let email = req.user._json.email;
+            if(validator.isEmail(email)){
+                let user = await User.findByLoginId(email);
+                if(user){
+                    return res.send({user});
+                }else{
+                    let firstName = req.user._json.first_name;
+                    let lastName = req.user._json.last_name;
+                    let gender = req.user._json.gender === 'female' ? 1 : 2;
+                    user = new User({
+                        firstName,
+                        lastName,
+                        email,
+                        loginId: email,
+                        gender,
+                        status: 1
+                    });
+                    await user.save();
+                    const token = await user.generateAuthToken();
+                    return res.header('token', token).send({user});
+                }
+            }
+        }
     }
 );
 
