@@ -3,6 +3,7 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+const tokenUtil = require('../utils/token.util');
 
 var UserSchema = new mongoose.Schema({
     firstName: {
@@ -115,19 +116,20 @@ var UserSchema = new mongoose.Schema({
 UserSchema.methods.toJSON = function () {
     var user = this;
     var userObject = user.toObject();
- 
-    return _.pick(userObject, ['_id', 'firstName', 'lastName', 'loginId', 
-        'position', 'status', 'myInterests', 'myExpertise', 'aboutMe', 
-        'comingFrom', 'gender', 'userProfileVirtualPath', 'dtLastLogin', 'loginNo',
-        'dtCreated', 'createdBy', 'dtUpdated', 'updatedBy']);
+    
+    //Send all properties but the password
+    return _.omit(userObject, ['password']);
 };
 
 UserSchema.methods.generateAuthToken = function () {
-    var user = this;
-    var token = jwt.sign({
-        _id: user._id.toHexString()
-    }, process.env.JWT_SECRET).toString();
- 
+    let user = this;
+    let dataInToken = {
+        _id: user._id.toHexString(),
+        user
+    };
+    //let token = jwt.sign(dataInToken, process.env.JWT_SECRET).toString();
+    let token = tokenUtil.generateToken(dataInToken);
+    
     return new Promise((resolve, reject) => {
         if(token){
             resolve(token);
@@ -143,6 +145,10 @@ UserSchema.statics.findByLoginId = function (loginId) {
         loginId
     });
 };
+
+UserSchema.statics.findUserByToken = function (token) {
+
+}
 
 UserSchema.statics.findByCredentials = function (loginId, password) {
     var User = this;

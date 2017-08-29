@@ -4,7 +4,7 @@ const { ObjectID } = require('mongodb');
 
 const { app } = require('./../server');
 const { users, populateUsers } = require('./seed/user_seed');
-const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/messageUtil');
+const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
 const { User } = require('../models/user');
 
 const URL = '/api/v2';
@@ -111,7 +111,7 @@ describe('Authentication Tests', () => {
                     expect(res.body).toExist();
                     expect(res.headers['token']).toExist();
                     expect(res.body.user).toExist();
-                    expect(res.body.user._id).toExclude();
+                    expect(res.body.user._id).toExist();
                     expect(res.body.user.password).toNotExist();
                     expect(res.body.user.firstName).toBe(requiredInfo.firstName);
                     expect(res.body.user.lastName).toBe(requiredInfo.lastName);

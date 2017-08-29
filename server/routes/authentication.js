@@ -8,7 +8,7 @@ const fbStrategy = require('passport-facebook').Strategy;
 const { google, facebook } = require('../config/auth-config');
 var { mongoose } = require('../db/mongoose.js');
 const { User } = require('../models/user');
-const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/messageUtil');
+const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
 var router = express.Router();
 
 passport.serializeUser(function (user, done) {

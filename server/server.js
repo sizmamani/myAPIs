@@ -7,16 +7,18 @@ const homeRoute = require('./routes/index');
 const authenticationRoute = require('./routes/authentication');
 const usersRoute = require('./routes/users');
 
+const BASE = '/api/v2';
+
 var app = express();
 
-const port = process.env.PORT;
+const PORT = process.env.PORT;
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 
 app.use('/', homeRoute);
-app.use('/api/v2/', authenticationRoute);
-app.use('/api/v2/', usersRoute);
+app.use(BASE, authenticationRoute);
+app.use(`${BASE}/users`, usersRoute);
 
-app.listen(port, () => console.log(`Server started and listening to Port ${port}`));
+app.listen(PORT, () => console.log(`Server started and listening to Port ${PORT}`));
 
 module.exports = { app };
