@@ -4,7 +4,6 @@ const { RESPONSE_CODES, ERRORS } = require('../utils/message.util');
 var authenticate = (req, res, next) => {
     //in this function get a token header and then criss check it to be sure it is genuine and if so call next 
     let token = req.header('token');
-
     if (token){ 
         try{
             let user = tokenUtil.getUser(token);

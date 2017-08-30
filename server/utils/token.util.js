@@ -6,6 +6,14 @@ const tokenUtil = module.exports = {
         let token = jwt.sign(data, process.env.JWT_SECRET).toString();
         return token;
     },
+    validateToken: (token) => {
+        try{
+            let decodedData = jwt.verify(token, process.env.JWT_SECRET);
+            return true;
+        }catch(err){
+            return false;
+        }
+    },
     getUser: (token) => {
         try{
             let decodedData = jwt.verify(token, process.env.JWT_SECRET);
