@@ -56,12 +56,8 @@ var UserSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    myInterests: {
-        type: Array
-    },
-    myExpertise: {
-        type: Array
-    },
+    myInterests: [],
+    myExpertise: [],
     aboutMe: {
         type: String,
         minlength: 1
@@ -70,29 +66,35 @@ var UserSchema = new mongoose.Schema({
         type: String,
         minlength: 1
     },
-    gender: {
-        type: Number
-    },
+    gender: Number,
     userProfileVirtualPath: {
         type: String,
         minlength: 1
     },
-    dtLastLogin: {
-        type: Date
-    },
+    dtLastLogin: Date,
     loginNo: {
-        type: Number
+        type: Number,
+        default: 1
     },
+    //Role and communities should be settled
+    //We might have 3 communities and 3 different roles in each community
+    //So I have to find a way to figue out my role in each community
+    roles: [],
+    communities: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Community'
+        }
+    ],
     dtCreated: {
-        type: Date
+        type: Date,
+        default: Date.now
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    dtUpdated: {
-        type: Date
-    },
+    dtUpdated: Date,
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -145,10 +147,6 @@ UserSchema.statics.findByLoginId = function (loginId) {
         loginId
     });
 };
-
-UserSchema.statics.findUserByToken = function (token) {
-
-}
 
 UserSchema.statics.findByCredentials = function (loginId, password) {
     var User = this;

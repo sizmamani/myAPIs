@@ -3,7 +3,7 @@ const validator = require('validator');
 const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 const { mongoose } = require('../db/mongoose.js');
-const { User } = require('../models/user');
+const { User } = require('../models/user.model');
 const { RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
 const { authenticate } = require('../middlewares/authenticate');
 const router = express.Router();
@@ -91,9 +91,7 @@ router.get('/:id', authenticate, async (req, res) => {
     if(!ObjectID.isValid(id)){
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_USER_ID);
     }
-    let user = await User.findById({
-        _id: id
-    });
+    let user = await User.findById(id);
     if(user){
         return res.send({user});
     }else{

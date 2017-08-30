@@ -5,13 +5,13 @@ const { ObjectID } = require('mongodb');
 const { app } = require('./../server');
 const { users, populateUsers } = require('./seed/user_seed');
 const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
-const { User } = require('../models/user');
+const { User } = require('../models/user.model');
 
 const URL = '/api/v2';
 
 beforeEach(populateUsers);
 
-describe('Authentication Tests', () => {
+describe('AUTHENTICATION TESTS', () => {
     describe('POST /forgot-password', () => {
         it('should send an email to the user if the account already exists', (done) => {
             request(app)

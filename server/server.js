@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const homeRoute = require('./routes/index');
 const authenticationRoute = require('./routes/authentication');
 const usersRoute = require('./routes/users');
+const communitiesRoute = require('./routes/communities');
 
 const BASE = '/api/v2';
 
@@ -18,6 +19,7 @@ app.use(bodyParser.text());
 app.use('/', homeRoute);
 app.use(BASE, authenticationRoute);
 app.use(`${BASE}/users`, usersRoute);
+app.use(`${BASE}/communities`, communitiesRoute);
 
 app.listen(PORT, () => console.log(`Server started and listening to Port ${PORT}`));
 

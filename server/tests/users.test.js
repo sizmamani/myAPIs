@@ -5,7 +5,7 @@ const { ObjectID } = require('mongodb');
 const { app } = require('./../server');
 const { users, populateUsers } = require('./seed/user_seed');
 const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
-const { User } = require('../models/user');
+const { User } = require('../models/user.model');
 const tokenUtil = require('../utils/token.util');
 const _ = require('lodash');
 
@@ -13,7 +13,7 @@ const URL = '/api/v2/users';
 
 beforeEach(populateUsers);
 
-describe('Users Tests', () => {
+describe('USERS TEST', () => {
     user = _.omit(users[0], ['password']);
     let data = {
         _id: users[0]._id,

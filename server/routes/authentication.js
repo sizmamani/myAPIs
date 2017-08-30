@@ -7,7 +7,7 @@ const googleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const fbStrategy = require('passport-facebook').Strategy;
 const { google, facebook } = require('../config/auth-config');
 var { mongoose } = require('../db/mongoose.js');
-const { User } = require('../models/user');
+const { User } = require('../models/user.model');
 const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
 var router = express.Router();
 
