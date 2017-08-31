@@ -5,6 +5,7 @@ const { ObjectID } = require('mongodb');
 const { app } = require('./../server');
 const { communities, populateCommunities } = require('./seed/community_seed');
 const { users, populateUsers } = require('./seed/user_seed');
+const { populateUserCommunity } = require('./seed/user_community_seed');
 const { RESPONSE_CODES, ERRORS } = require('../utils/message.util');
 const { Community } = require('../models/community.model');
 const tokenUtil = require('../utils/token.util');
@@ -13,6 +14,8 @@ const _ = require('lodash');
 const URL = '/api/v2/communities';
 
 beforeEach(populateCommunities);
+beforeEach(populateUsers);
+beforeEach(populateUserCommunity);
 
 describe('COMMUNITIES TEST', () => {
     describe('GET /communities/:id', () => {
@@ -52,7 +55,6 @@ describe('COMMUNITIES TEST', () => {
 
     });
     describe('GET /communities/:id/join', () => {
-        beforeEach(populateUsers);
         user = _.omit(users[0], ['password']);
         let data = {
             _id: users[0]._id,
@@ -169,7 +171,6 @@ describe('COMMUNITIES TEST', () => {
         });
     });
     describe('GET /communities/mine', () => {
-        beforeEach(populateUsers);
         user = _.omit(users[0], ['password']);
         let data = {
             _id: users[0]._id,
@@ -184,6 +185,23 @@ describe('COMMUNITIES TEST', () => {
                 .expect((res) => {
                     expect(res.body.communities).toExist();
                     expect(res.body.communities.length).toBe(0);
+                })
+                .end(done);
+        });
+        it('should return communities array for the user', (done) => {
+            user = _.omit(users[1], ['password']);
+            let data = {
+                _id: users[1]._id,
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/mine`)
+                .set('token', token)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body.communities).toExist();
+                    expect(res.body.communities.length).toBe(2);
                 })
                 .end(done);
         });

@@ -14,9 +14,9 @@ const URL = '/api/v2/users';
 beforeEach(populateUsers);
 
 describe('USERS TEST', () => {
-    user = _.omit(users[0], ['password']);
+    user = _.omit(users[1], ['password']);
     let data = {
-        _id: users[0]._id,
+        _id: users[1]._id,
         user
     };
     let token = tokenUtil.generateToken(data);
@@ -51,12 +51,12 @@ describe('USERS TEST', () => {
     describe('GET /users/:id', () => {
         it('should return user with a given id', (done) => {
             request(app)
-                .get(`${URL}/${users[0]._id.toHexString()}`)
+                .get(`${URL}/${users[1]._id.toHexString()}`)
                 .set('token', token)
                 .expect(200)
                 .expect((res) => {
                     expect(res.body.user).toExist();
-                    expect(res.body.user._id).toEqual(users[0]._id);
+                    expect(res.body.user._id).toEqual(users[1]._id);
                     expect(res.body.user.firstName).toBe(user.firstName);
                     expect(res.body.user.loginId).toBe(user.loginId);
                 })

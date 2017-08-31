@@ -198,6 +198,4 @@ router.get('/:id/join', authenticate, async (req, res) => {
 
 });
 
-
-
 module.exports = router;
