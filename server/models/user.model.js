@@ -67,10 +67,10 @@ var UserSchema = new mongoose.Schema({
         minlength: 1
     },
     gender: Number,
-    userProfileVirtualPath: {
-        type: String,
-        minlength: 1
-    },
+    // userProfileVirtualPath: {
+    //     type: String,
+    //     minlength: 1
+    // },
     dtLastLogin: Date,
     loginNo: {
         type: Number,

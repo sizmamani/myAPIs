@@ -2,7 +2,7 @@ const facebook = {
     clientID: '1731757717125450',
     clientSecret: '4010d5643a1f29760e084d1745264373',
     callbackURL: 'http://localhost:3000/api/v2/facebook/callback',
-    profileFields: ['email', 'id', 'name', 'gender', 'picture']
+    profileFields: ['email', 'id', 'name', 'gender', 'picture.width(500).height(500)']
 };
 
 const google = {

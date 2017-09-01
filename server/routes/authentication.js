@@ -9,6 +9,8 @@ const { google, facebook } = require('../config/auth-config');
 var { mongoose } = require('../db/mongoose.js');
 const { User } = require('../models/user.model');
 const { generateError, RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
+const imageUtil = require('../utils/image.util');
+
 var router = express.Router();
 
 passport.serializeUser(function (user, done) {
@@ -317,9 +319,6 @@ router.get('/login/google', passport.authenticate('google', { scope: google.scop
 router.get('/signup/google', passport.authenticate('google', { scope: google.scope }));
 
 
-
-
-
 router.get('/google/callback',
     passport.authenticate('google', {
         failureRedirect: '/oauth-failed'
@@ -328,6 +327,7 @@ router.get('/google/callback',
         //If account does not exist then sign up
         if(req.user){
             let email = req.user._json.emails[0].value;
+            let imageUrl = req.user._json.image.url + '0';
             if(validator.isEmail(email)){
                 let user = await User.findByLoginId(email);
                 if(user){
@@ -342,6 +342,7 @@ router.get('/google/callback',
                         loginId: email,
                         status: 1
                     });
+                    imageUtil.saveFileByUrl(imageUrl, `${user._id}.jpg`);
                     await user.save();
                     const token = await user.generateAuthToken();
                     return res.header('token', token).send({user});
@@ -431,6 +432,7 @@ router.get('/facebook/callback',
         //If account does not exist then sign up
         if(req.user){
             let email = req.user._json.email;
+            let imageUrl = req.user._json.picture.data.url;
             if(validator.isEmail(email)){
                 let user = await User.findByLoginId(email);
                 if(user){
@@ -447,6 +449,7 @@ router.get('/facebook/callback',
                         gender,
                         status: 1
                     });
+                    imageUtil.saveFileByUrl(imageUrl, `${user._id}.jpg`);
                     await user.save();
                     const token = await user.generateAuthToken();
                     return res.header('token', token).send({user});
