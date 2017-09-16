@@ -58,6 +58,58 @@ router.get('/mine', authenticate, async (req, res) => {
     });
 });
 
+
+/**
+ * @api {GET} /communities/current Gets the current Community User is logged in
+ * @apiGroup Communities
+ * @apiVersion 2.0.0
+ * @apiName GetCurrentCommunity
+ * @apiDescription This API is used for the user to know which community he/she is currently logged in
+ * @apiHeaderExample {string} Header-Example:
+ * "Content-Type":"application/json"
+ * "token":"TOKEN_GIVEN_WHEN_LOGIN"
+ * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  "currentCommunity": {
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
+ *  }
+ * }
+ * @apiError (401) {json} NO_COMMUNITY_YET YOU DO NOT HAVE ANY COMMUNITY YET
+ * @apiError (401) {json} INVALID_COMMUNITY_ID INVALID COMMUNITY ID
+ * @apiError (401) {json} WRONG_TOKEN TOKEN WAS WRONG
+ * @apiError (401) {json} EXPIRED_TOKEN TOKEN WAS EXPIRED
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
+router.get('/current', authenticate, async (req, res) => {
+    let _id = tokenUtil.getCurrentCommunityId(req.token);
+    if (!_id) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NO_COMMUNITY_YET);
+    }
+    if (!ObjectID.isValid(_id)) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
+    }
+    let currentCommunity = await Community.findById(_id);
+    if (!currentCommunity) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.COMMUNITY_DOES_NOT_EXIST);
+    }
+    return res.send({ currentCommunity });
+});
+
+
 /**
  * @api {GET} /api/v2/communities/:id Get Community by Id
  * @apiGroup Communities
@@ -123,6 +175,7 @@ router.get('/:id', authenticate, async (req, res) => {
  * "token":"TOKEN_GIVEN_WHEN_LOGIN"
  * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
  * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
  * @apiSuccessExample {json} Success-Response-Body:
  * {
  *  "user": {
@@ -145,6 +198,8 @@ router.get('/:id', authenticate, async (req, res) => {
  *      "latitude": "38.8829024"
  *  }]
  * }
+ * @apiSuccessExample {string} Success-Response-Header:
+ * token: STRING_OF_TOKEN
  * @apiError (401) {json} INVALID_COMMUNITY_ID INVALID COMMUNITY ID
  * @apiError (401) {json} COMMUNITY_DOES_NOT_EXIST COMMUNITY DOES NOT EXIST
  * @apiError (401) {json} COMMUNITY_ALREADY_ADDED COMMUNITY ALREADY ADDED
@@ -167,7 +222,6 @@ router.get('/:id/join', authenticate, async (req, res) => {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
     }
     try {
-        //I also have to update the token
         //In example below, I can get the communities that user already joined from the token
         //Then if the community is going to be one of them, we do not have to go through it again
         //We can send an error of something.
@@ -175,17 +229,21 @@ router.get('/:id/join', authenticate, async (req, res) => {
         let community = await Community.findById(id);
         if (community) {
             let user = await User.findByIdAndUpdate(req.user._id, {
+                $set: {
+                    currentCommunity: community._id
+                },
                 $addToSet: {
                     communities: community
                 }
-            }, {new: true}).populate({
+            }, { new: true }).populate({
                 path: 'communities',
                 populate: {
                     path: 'communities',
                     component: 'Community'
                 }
             });
-            res.send({
+            const token = await user.generateAuthToken();
+            res.header('token', token).send({
                 user,
                 communities: user.communities
             })

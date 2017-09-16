@@ -25,7 +25,7 @@ const tokenUtil = module.exports = {
     getUserId: (token) => {
         try{
             let decodedData = jwt.verify(token, process.env.JWT_SECRET);
-            return new ObjectID(decodedData._id);
+            return new ObjectID(decodedData.user._id);
         }catch(err){
             throw err;
         }
@@ -48,6 +48,13 @@ const tokenUtil = module.exports = {
         let user = tokenUtil.getUser(token);
         if(user) {
             return `${user.firstName} ${user.lastName}`
+        }
+        return null;
+    },
+    getCurrentCommunityId: (token) => {
+        let user = tokenUtil.getUser(token);
+        if(user){
+            return user.currentCommunity;
         }
         return null;
     }

@@ -79,13 +79,20 @@ var UserSchema = new mongoose.Schema({
     //Role and communities should be settled
     //We might have 3 communities and 3 different roles in each community
     //So I have to find a way to figue out my role in each community
-    roles: [],
+    roles: {
+        type: Array
+        //default: [APP_CONSTANTS.ROLE_RESIDENT]
+    },
     communities: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Community'
         }
     ],
+    currentCommunity: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Community'
+    },
     dtCreated: {
         type: Date,
         default: Date.now
@@ -125,10 +132,20 @@ UserSchema.methods.toJSON = function () {
 
 UserSchema.methods.generateAuthToken = function () {
     let user = this;
+    var userObject = user.toObject();
+    user = _.omit(userObject, ['__v', 
+        'dtCreated',
+        'dtLastLogin', 
+        'roles', 
+        'loginNo', 
+        'myExpertise', 
+        'myInterests', 
+        'loginId', 
+        'password']);
     let dataInToken = {
-        _id: user._id.toHexString(),
         user
     };
+
     //let token = jwt.sign(dataInToken, process.env.JWT_SECRET).toString();
     let token = tokenUtil.generateToken(dataInToken);
     

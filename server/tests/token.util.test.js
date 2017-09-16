@@ -4,7 +4,6 @@ const tokenUtil = require('../utils/token.util');
 
 describe('TOKEN UTILS TEST', () => {
     let data = {
-        _id: '59a5c3874fb26705969c6f47',
         user:
         {
             _id: '59a5c3874fb26705969c6f47',
@@ -30,7 +29,7 @@ describe('TOKEN UTILS TEST', () => {
         let user = tokenUtil.getUser(token);
         expect(user).toBeA('object');
         expect(user).toInclude(data.user);
-        expect(user._id).toBe(data._id);
+        expect(user._id).toBe(data.user._id);
     });
 
     it('should successfully get user email from a token', () => {
@@ -54,7 +53,7 @@ describe('TOKEN UTILS TEST', () => {
         let id = tokenUtil.getUserId(token);
         expect(id)
             .toBeA('object')
-            .toEqual(data._id);
+            .toEqual(data.user._id);
     });
 
     it('should successfully get user full name from a token', () => {
@@ -63,6 +62,14 @@ describe('TOKEN UTILS TEST', () => {
         expect(fullName)
             .toBeA('string')
             .toBe(`${data.user.firstName} ${data.user.lastName}`);
+    });
+
+    it('should successfully get user current community from a token', () => {
+        data.user.currentCommunity = new ObjectID();
+        let token = tokenUtil.generateToken(data);
+        let communityId = tokenUtil.getCurrentCommunityId(token);
+        expect(communityId)
+            .toEqual(data.user.currentCommunity);
     });
 
 });

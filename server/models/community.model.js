@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const APP_CONSTANTS = require('../utils/app.constants');
 
 let CommunitySchema = new mongoose.Schema({
     communityName: {
@@ -16,8 +17,21 @@ let CommunitySchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    longitude: String,
-    latitude: String,
+    location: {
+        longitude: String,
+        latitude: String
+    },
+    roles: [{
+        role: {
+            type: Number,
+            default: APP_CONSTANTS.ROLE_RESIDENT
+        },
+        no_access: []
+    }
+    ],
+    features: {
+        type: Array
+    },
     dtCreated: {
         type: Date,
         default: Date.now
