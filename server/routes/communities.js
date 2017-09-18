@@ -165,6 +165,91 @@ router.get('/:id', authenticate, async (req, res) => {
 
 
 /**
+ * @api {GET} /communities/switch/:id Switch from one community to another
+ * @apiGroup Communities
+ * @apiVersion 2.0.0
+ * @apiName SwitchCommunityById
+ * @apiDescription This API is used for the user to switch from one of its communities to another
+ * @apiHeaderExample {string} Header-Example:
+ * "Content-Type":"application/json"
+ * "token":"TOKEN_GIVEN_WHEN_LOGIN"
+ * @apiSuccess (Success-Response-body) {json} user User Object is return in the body
+ * @apiSuccess (Success-Response-body) {json} communities Communities Object is return in the body
+ * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  "user": {
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
+ *  },
+ *  "communities": [{
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
+ *  }, {
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
+ *  }]
+ * }
+ * @apiSuccessExample {string} Success-Response-Header:
+ * token: STRING_OF_TOKEN
+ * @apiError (401) {json} INVALID_COMMUNITY_ID INVALID COMMUNITY ID
+ * @apiError (401) {json} USER_NOT_JOINED_COMMUNITY USER IS NOT MEMBER OF THE COMMUNITY
+ * @apiError (401) {json} COMMUNITY_DOES_NOT_EXIST COMMUNITY DOES NOT EXIST
+ * @apiError (401) {json} WRONG_TOKEN TOKEN WAS WRONG
+ * @apiError (401) {json} EXPIRED_TOKEN TOKEN WAS EXPIRED
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
+router.get('/switch/:id', authenticate, async (req, res) => {
+    let id = req.params.id;
+    if (!ObjectID.isValid(id)) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
+    }
+    let userCommunities = tokenUtil.getUserCommunities(req.token);
+    if(userCommunities){
+        if(userCommunities.indexOf(id) > -1){
+            let user = await User.findByIdAndUpdate(tokenUtil.getUserId(req.token), {
+                $set: {
+                    currentCommunity: id
+                }
+            }, 
+            { new: true });
+            const token = await user.generateAuthToken();
+            res.header('token', token).send({
+                user,
+                communities: user.communities
+            });
+        }else{
+            res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
+        }
+    }else{
+        res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
+    }
+
+
+
+
+    
+});
+
+/**
  * @api {GET} /communities/:id/join Join Community by Community Id
  * @apiGroup Communities
  * @apiVersion 2.0.0
@@ -246,7 +331,7 @@ router.get('/:id/join', authenticate, async (req, res) => {
             res.header('token', token).send({
                 user,
                 communities: user.communities
-            })
+            });
         } else {
             return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.COMMUNITY_DOES_NOT_EXIST);
         }

@@ -207,36 +207,26 @@ describe('COMMUNITIES TEST', () => {
                 .end(done);
         });
     });
-
-
-
-
-
-
-
-
-
-
     describe('GET /communities/current', () => {
-        user = _.omit(users[0], ['password']);
-        user.currentCommunity = communities[0]._id;
-        let data = {
-            user
-        };
-        let token = tokenUtil.generateToken(data);
         it('should return one community which user is already in', (done) => {
+            user = _.omit(users[1], ['password']);
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
             request(app)
                 .get(`${URL}/current`)
                 .set('token', token)
                 .expect(200)
                 .expect((res) => {
                     expect(res.body.currentCommunity).toExist();
-                    expect(res.body.currentCommunity._id).toEqual(communities[0]._id);
+                    
+                    expect(res.body.currentCommunity._id).toEqual(user.communities[0]);
                 })
                 .end(done);
         });
         it('should return no community for the user', (done) => {
-            user = _.omit(users[1], ['password']);
+            user = _.omit(users[0], ['password']);
             let data = {
                 user
             };
@@ -269,6 +259,72 @@ describe('COMMUNITIES TEST', () => {
                     expect(res.body.error).toInclude(ERRORS.COMMUNITY_DOES_NOT_EXIST.error);
                     expect(res.body.error.code).toBe(ERRORS.COMMUNITY_DOES_NOT_EXIST.error.code);
                     expect(res.body.error.message).toBe(ERRORS.COMMUNITY_DOES_NOT_EXIST.error.message);
+                })
+                .end(done);
+        });
+    });
+
+
+
+
+
+
+
+
+
+    describe('GET /communities/switch/:id', () => {
+        it('should be able to switch to another community', (done) => {
+            user = _.omit(users[1], ['password']);
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/switch/${user.communities[1]}`)
+                .set('token', token)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.header.token).toExist();
+                    expect(res.header.token).toNotBe(token);
+                    expect(res.body.user).toExist();
+                    expect(res.body.communities).toExist();
+                    expect(res.body.user.currentCommunity).toEqual(user.communities[1]);
+                })
+                .end(done);
+        });
+        it('should not switch to a community which is not member of it', (done) => {
+            user = _.omit(users[1], ['password']);
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/switch/${new ObjectID()}`)
+                .set('token', token)
+                .expect(RESPONSE_CODES.UNAUTHORIZED)
+                .expect((res) => {
+                    expect(res.body.error).toExist();
+                    expect(res.body.error).toInclude(ERRORS.USER_NOT_JOINED_COMMUNITY.error);
+                    expect(res.body.error.code).toBe(ERRORS.USER_NOT_JOINED_COMMUNITY.error.code);
+                    expect(res.body.error.message).toBe(ERRORS.USER_NOT_JOINED_COMMUNITY.error.message);
+                })
+                .end(done);
+        });
+        it('should give error if community id is empty or wrong', (done) => {
+            user = _.omit(users[1], ['password']);
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/switch/`)
+                .set('token', token)
+                .expect(RESPONSE_CODES.UNAUTHORIZED)
+                .expect((res) => {
+                    expect(res.body.error).toExist();
+                    expect(res.body.error).toInclude(ERRORS.INVALID_COMMUNITY_ID.error);
+                    expect(res.body.error.code).toBe(ERRORS.INVALID_COMMUNITY_ID.error.code);
+                    expect(res.body.error.message).toBe(ERRORS.INVALID_COMMUNITY_ID.error.message);
                 })
                 .end(done);
         });

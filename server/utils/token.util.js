@@ -57,5 +57,12 @@ const tokenUtil = module.exports = {
             return user.currentCommunity;
         }
         return null;
+    },
+    getUserCommunities: (token) => {
+        let user = tokenUtil.getUser(token);
+        if(user){
+            return user.communities;
+        }
+        return null;
     }
 };

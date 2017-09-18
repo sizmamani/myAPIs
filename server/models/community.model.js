@@ -32,6 +32,28 @@ let CommunitySchema = new mongoose.Schema({
     features: {
         type: Array
     },
+    posts: [
+        {
+            description: {
+                type: String
+            },
+            images: {
+                type: Array
+            },
+            postedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            postedDate: {
+                type: Date,
+                default: Date.now
+            },
+            status: Number
+        }
+    ],
+    notices: {
+        type: Array
+    },
     dtCreated: {
         type: Date,
         default: Date.now
