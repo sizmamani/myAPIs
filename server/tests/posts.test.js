@@ -43,7 +43,6 @@ describe('COMMUNITY POSTS TEST', () => {
                     expect(res.body.posts.length).toBe(2);
                     expect(res.body.posts[0].community).toEqual(communities[0]._id);
                     expect(res.body.posts[0].postedBy).toEqual(users[1]._id);
-                    expect(res.body.posts[0].description).toBe(posts[0].description);
                     expect(res.body.posts[0].comments).toExist();
                     expect(res.body.posts[0].comments.length).toBe(2);
                     expect(res.body.posts[0].comments[0].commentedBy).toEqual(users[1]._id);
@@ -460,12 +459,18 @@ describe('COMMUNITY POSTS TEST', () => {
                 })
                 .end((err) => {
                     if(err){
-                        done(err);
+                        return done(err);
                     }
                     Post.findById(_id)
                         .then((post) => {
                             expect(post).toExist();
                             expect(post.description).toBe(post.description);
+                            Community.findById(communities[0]._id)
+                                .then((community) => {
+                                    expect(community).toExist();
+                                    expect(community.posts).toExist();
+                                    expect(community.posts).toInclude(_id);
+                                });
                             done();
                     }).catch((err) => {
                         return done(err);
@@ -562,5 +567,211 @@ describe('COMMUNITY POSTS TEST', () => {
             .end(done);
         });
     });
+
+
+    describe('PATCH /:communityId/posts/:postId', () => {
+        it('should update a post by post id', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: 'New Description',
+                status: 2
+            };
+            request(app)
+            .patch(`${URL}/${communities[0]._id}/posts/${posts[0]._id}`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.post).toExist();
+                expect(res.body.post._id).toEqual(posts[0]._id);
+                expect(res.body.post.status).toBe(post.status);
+                expect(res.body.post.description).toBe(post.description);
+            })
+            .end((err) => {
+                if(err){
+                    return done(err);
+                }
+                Post.findById(posts[0]._id)
+                    .then((post) => {
+                        expect(post).toExist();
+                        expect(post._id).toEqual(posts[0]._id);
+                        expect(post.status).toBe(post.status);
+                        expect(post.description).toBe(post.description);
+                        done();
+                    }).catch((err) => {
+                        return done(err);
+                    });
+            })
+        });
+        it('should not update if post does not exist', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .patch(`${URL}/${communities[0]._id}/posts/${new ObjectID()}`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.POST_DOES_NOT_EXIST.error);
+                expect(res.body.error.code).toBe(ERRORS.POST_DOES_NOT_EXIST.error.code);
+                expect(res.body.error.message).toBe(ERRORS.POST_DOES_NOT_EXIST.error.message);
+            })
+            .end(done);
+        });
+        it('should not update if postId is invalid', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .patch(`${URL}/${communities[0]._id}/posts/123456`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.INVALID_POST_ID.error);
+                expect(res.body.error.code).toBe(ERRORS.INVALID_POST_ID.error.code);
+                expect(res.body.error.message).toBe(ERRORS.INVALID_POST_ID.error.message);
+            })
+            .end(done);
+        });
+        it('should not update if communityId is invalid', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .patch(`${URL}/123456/posts/${new ObjectID()}`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.INVALID_COMMUNITY_ID.error);
+                expect(res.body.error.code).toBe(ERRORS.INVALID_COMMUNITY_ID.error.code);
+                expect(res.body.error.message).toBe(ERRORS.INVALID_COMMUNITY_ID.error.message);
+            })
+            .end(done);
+        });
+        
+        it('should not update a post if that does not belong to the user', (done) => {
+            user = _.omit(users[0], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: 'New Description',
+                status: 2
+            };
+            request(app)
+            .patch(`${URL}/${communities[0]._id}/posts/${posts[0]._id}`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.POST_OWNER_UPDATE_ONLY.error);
+                expect(res.body.error.code).toBe(ERRORS.POST_OWNER_UPDATE_ONLY.error.code);
+                expect(res.body.error.message).toBe(ERRORS.POST_OWNER_UPDATE_ONLY.error.message);
+            })
+            .end(done);
+        });
+
+        it('should not update if current community is different', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: 'New Description',
+                status: 2
+            };
+            request(app)
+            .patch(`${URL}/${communities[1]._id}/posts/${posts[0]._id}`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.NOT_CURRENT_COMMUNITY.error);
+                expect(res.body.error.code).toBe(ERRORS.NOT_CURRENT_COMMUNITY.error.code);
+                expect(res.body.error.message).toBe(ERRORS.NOT_CURRENT_COMMUNITY.error.message);
+            })
+            .end(done);
+        });
+
+        it('should not update post if user is not member of the community', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: 'New Description',
+                status: 2
+            };
+            request(app)
+            .patch(`${URL}/${communities[1]._id}/posts/${posts[0]._id}`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.USER_NOT_JOINED_COMMUNITY.error);
+                expect(res.body.error.code).toBe(ERRORS.USER_NOT_JOINED_COMMUNITY.error.code);
+                expect(res.body.error.message).toBe(ERRORS.USER_NOT_JOINED_COMMUNITY.error.message);
+            })
+            .end(done);
+        });
+    })
 });
 //./node_modules/mocha/bin/mocha server/tests/posts.test.js

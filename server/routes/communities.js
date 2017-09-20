@@ -9,7 +9,7 @@ const router = express.Router();
 const tokenUtil = require('../utils/token.util');
 
 /**
- * @api {GET} /communities/mine List the communities user is joined
+ * @api {GET} /api/v2/communities/mine List the communities user is joined
  * @apiGroup Communities
  * @apiVersion 2.0.0
  * @apiName ListUserCommunities
@@ -58,7 +58,7 @@ router.get('/mine', authenticate, async (req, res) => {
 
 
 /**
- * @api {GET} /communities/current Gets the current Community User is logged in
+ * @api {GET} /api/v2/communities/current Gets the current Community User is logged in
  * @apiGroup Communities
  * @apiVersion 2.0.0
  * @apiName GetCurrentCommunity
@@ -163,7 +163,7 @@ router.get('/:id', authenticate, async (req, res) => {
 
 
 /**
- * @api {GET} /communities/switch/:id Switch from one community to another
+ * @api {GET} /api/v2/communities/switch/:id Switch from one community to another
  * @apiGroup Communities
  * @apiVersion 2.0.0
  * @apiName SwitchCommunityById
@@ -243,7 +243,7 @@ router.get('/switch/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @api {GET} /communities/:id/join Join Community by Community Id
+ * @api {GET} /api/v2/communities/:id/join Join Community by Community Id
  * @apiGroup Communities
  * @apiVersion 2.0.0
  * @apiName JoinCommunityById
