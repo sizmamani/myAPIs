@@ -1,7 +1,8 @@
 const express = require('express');
 const _ = require('lodash');
+const validator = require('validator');
 const { ObjectID } = require('mongodb');
-// const { Community } = require('../models/community.model');
+const { Community } = require('../models/community.model');
 // const { User } = require('../models/user.model');
 const { Post } = require('../models/post.model');
 const { RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
@@ -79,7 +80,7 @@ const tokenUtil = require('../utils/token.util');
  */
 router.get('/:communityId/posts', authenticate, (req, res) => {
     let communityId = req.params.communityId;
-    if(!ObjectID.isValid(communityId)){
+    if (!ObjectID.isValid(communityId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
     }
     let currentCommunity = tokenUtil.getCurrentCommunityId(req.token);
@@ -91,12 +92,12 @@ router.get('/:communityId/posts', authenticate, (req, res) => {
                 community: communityId,
                 status: 1
             }).then((posts) => {
-                return res.send({posts});
+                return res.send({ posts });
             })
-        }else{
-            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);    
+        } else {
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
         }
-    }else{
+    } else {
         //user does has not joined this community at all
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
     }
@@ -155,10 +156,10 @@ router.get('/:communityId/posts', authenticate, (req, res) => {
 router.get('/:communityId/posts/:postId', authenticate, (req, res) => {
     let communityId = req.params.communityId;
     let postId = req.params.postId;
-    if(!ObjectID.isValid(communityId)){
+    if (!ObjectID.isValid(communityId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
     }
-    if(!ObjectID.isValid(postId)){
+    if (!ObjectID.isValid(postId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_POST_ID);
     }
 
@@ -168,18 +169,18 @@ router.get('/:communityId/posts/:postId', authenticate, (req, res) => {
         //Means user has joined this community so we need to check if this is his current community
         if (currentCommunity === communityId) {
             Post.findById(postId).then((post) => {
-                if(!post){
+                if (!post) {
                     return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_DOES_NOT_EXIST);
                 }
-                if(post.status !== 1){
-                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);    
+                if (post.status !== 1) {
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);
                 }
-                return res.send({post});
+                return res.send({ post });
             })
-        }else{
-            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);    
+        } else {
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);
         }
-    }else{
+    } else {
         //user does has not joined this community at all
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
     }
@@ -232,10 +233,10 @@ router.get('/:communityId/posts/:postId', authenticate, (req, res) => {
 router.get('/:communityId/posts/:postId/comments', authenticate, (req, res) => {
     let communityId = req.params.communityId;
     let postId = req.params.postId;
-    if(!ObjectID.isValid(communityId)){
+    if (!ObjectID.isValid(communityId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
     }
-    if(!ObjectID.isValid(postId)){
+    if (!ObjectID.isValid(postId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_POST_ID);
     }
 
@@ -245,21 +246,21 @@ router.get('/:communityId/posts/:postId/comments', authenticate, (req, res) => {
         //Means user has joined this community so we need to check if this is his current community
         if (currentCommunity === communityId) {
             Post.findById(postId).then((post) => {
-                if(!post){
+                if (!post) {
                     return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_DOES_NOT_EXIST);
                 }
-                if(post.status !== 1){
-                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);    
+                if (post.status !== 1) {
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);
                 }
                 return res.send({
                     postId: post._id,
                     comments: post.comments
                 });
             })
-        }else{
-            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);    
+        } else {
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);
         }
-    }else{
+    } else {
         //user does has not joined this community at all
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
     }
@@ -309,10 +310,10 @@ router.get('/:communityId/posts/:postId/comments', authenticate, (req, res) => {
 router.get('/:communityId/posts/:postId/likes', authenticate, (req, res) => {
     let communityId = req.params.communityId;
     let postId = req.params.postId;
-    if(!ObjectID.isValid(communityId)){
+    if (!ObjectID.isValid(communityId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
     }
-    if(!ObjectID.isValid(postId)){
+    if (!ObjectID.isValid(postId)) {
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_POST_ID);
     }
 
@@ -322,21 +323,64 @@ router.get('/:communityId/posts/:postId/likes', authenticate, (req, res) => {
         //Means user has joined this community so we need to check if this is his current community
         if (currentCommunity === communityId) {
             Post.findById(postId).then((post) => {
-                if(!post){
+                if (!post) {
                     return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_DOES_NOT_EXIST);
                 }
-                if(post.status !== 1){
-                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);    
+                if (post.status !== 1) {
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);
                 }
                 return res.send({
                     postId: post._id,
                     likes: post.likes
                 });
             })
-        }else{
-            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);    
+        } else {
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);
         }
-    }else{
+    } else {
+        //user does has not joined this community at all
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
+    }
+});
+
+router.post('/:communityId/posts', authenticate, async (req, res) => {
+    let communityId = req.params.communityId;
+    if (!ObjectID.isValid(communityId)) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
+    }
+    
+    if (validator.isEmpty(req.body.post.description)) {
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_DESCRIPTION_IS_REQUIRED);
+    }
+    let currentCommunity = tokenUtil.getCurrentCommunityId(req.token);
+    let userCommunities = tokenUtil.getUserCommunities(req.token);
+    if (userCommunities.indexOf(communityId) > -1) {
+        //Means user has joined this community so we need to check if this is his current community
+        if (currentCommunity === communityId) {
+            let userId = tokenUtil.getUserId(req.token);
+            let post = new Post();
+            post.description = req.body.post.description;
+            post.postedBy = userId;
+            post.status = 1;
+            post.community = currentCommunity;
+            try {
+                await post.save();
+                Community.findByIdAndUpdate(currentCommunity, {
+                    $addToSet: {
+                        posts: post._id
+                    }
+                },
+                    { new: true }
+                )
+                return res.send({ post })
+            } catch (err) {
+                console.log(err);
+                return res.status(RESPONSE_CODES.UNAUTHORIZED).send(err);
+            }
+        } else {
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);
+        }
+    } else {
         //user does has not joined this community at all
         return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
     }

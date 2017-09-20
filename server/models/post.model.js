@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 let postSchema = new mongoose.Schema({
     description: {
-        type: String
+        type: String,
+        required: true
     },
     images: [],
     postedBy: {
@@ -15,6 +16,7 @@ let postSchema = new mongoose.Schema({
     },
     status: Number,
     community: {
+        required: true,
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Community'
     },

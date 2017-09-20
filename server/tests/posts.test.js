@@ -425,4 +425,142 @@ describe('COMMUNITY POSTS TEST', () => {
             .end(done);
         });
     });
+
+
+    describe('POST /communities/:communityId/posts', () => {
+        it('should send a post to the user community', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: `Post sent by ${users[1].firstName} ${users[1].lastName}`
+            }
+            let _id = null;
+            request(app)
+                .post(`${URL}/${communities[0]._id}/posts`)
+                .set('token', token)
+                .send({
+                    post
+                })
+                .expect(200)
+                .expect((res) => {
+                    _id = res.body.post._id;
+                    expect(res.body.post).toExist();
+                    expect(res.body.post._id).toExist();
+                    expect(res.body.post.description).toBe(post.description);
+                    expect(res.body.post.status).toBe(1);
+                    expect(res.body.post.postedBy).toEqual(users[1]._id);
+                })
+                .end((err) => {
+                    if(err){
+                        done(err);
+                    }
+                    Post.findById(_id)
+                        .then((post) => {
+                            expect(post).toExist();
+                            expect(post.description).toBe(post.description);
+                            done();
+                    }).catch((err) => {
+                        return done(err);
+                    });
+                });
+        });
+
+        it('should not post if description is empty', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: ''
+            }
+            request(app)
+            .post(`${URL}/${communities[0]._id}/posts`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.POST_DESCRIPTION_IS_REQUIRED.error);
+                expect(res.body.error.code).toBe(ERRORS.POST_DESCRIPTION_IS_REQUIRED.error.code);
+                expect(res.body.error.message).toBe(ERRORS.POST_DESCRIPTION_IS_REQUIRED.error.message);
+            })
+            .end(done);
+        });
+
+        it('should not post if current community is different', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: 'Some Description'
+            }
+            request(app)
+            .post(`${URL}/${communities[1]._id}/posts`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.NOT_CURRENT_COMMUNITY.error);
+                expect(res.body.error.code).toBe(ERRORS.NOT_CURRENT_COMMUNITY.error.code);
+                expect(res.body.error.message).toBe(ERRORS.NOT_CURRENT_COMMUNITY.error.message);
+            })
+            .end(done);
+        });
+
+        it('should not post if user is not member of the community', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+
+            let post = {
+                description: 'Some Description'
+            }
+            request(app)
+            .post(`${URL}/${communities[1]._id}/posts`)
+            .set('token', token)
+            .send({
+                post
+            })
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.USER_NOT_JOINED_COMMUNITY.error);
+                expect(res.body.error.code).toBe(ERRORS.USER_NOT_JOINED_COMMUNITY.error.code);
+                expect(res.body.error.message).toBe(ERRORS.USER_NOT_JOINED_COMMUNITY.error.message);
+            })
+            .end(done);
+        });
+    });
 });
+//./node_modules/mocha/bin/mocha server/tests/posts.test.js
