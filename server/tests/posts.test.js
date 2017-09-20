@@ -309,4 +309,120 @@ describe('COMMUNITY POSTS TEST', () => {
             .end(done);
         });
     });
+
+    describe('GET /communities/:communityId/posts/:postId/likes', () => {
+        it('should return list of likes of a specific post', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/${communities[0]._id}/posts/${posts[0]._id}/likes`)
+                .set('token', token)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body.postId).toEqual(posts[0]._id);
+                    expect(res.body.likes).toExist();
+                    expect(res.body.likes.length).toBeGreaterThan(0);
+                })
+                .end(done);
+        });
+
+        it('should reject if the user is not part of that community', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .get(`${URL}/${communities[1]._id}/posts/${posts[0]._id}/likes`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.NOT_CURRENT_COMMUNITY.error);
+                expect(res.body.error.code).toBe(ERRORS.NOT_CURRENT_COMMUNITY.error.code);
+                expect(res.body.error.message).toBe(ERRORS.NOT_CURRENT_COMMUNITY.error.message);
+            })
+            .end(done);
+        });
+
+        it('should reject if the postId is not valid', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .get(`${URL}/${communities[0]._id}/posts/123456/likes`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.INVALID_POST_ID.error);
+                expect(res.body.error.code).toBe(ERRORS.INVALID_POST_ID.error.code);
+                expect(res.body.error.message).toBe(ERRORS.INVALID_POST_ID.error.message);
+            })
+            .end(done);
+        });
+
+        it('should reject if the post does not exists', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .get(`${URL}/${communities[0]._id}/posts/${new ObjectID()}/likes`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.POST_DOES_NOT_EXIST.error);
+                expect(res.body.error.code).toBe(ERRORS.POST_DOES_NOT_EXIST.error.code);
+                expect(res.body.error.message).toBe(ERRORS.POST_DOES_NOT_EXIST.error.message);
+            })
+            .end(done);
+        });
+
+        it('should reject if the post is not viewable', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+            .get(`${URL}/${communities[0]._id}/posts/${posts[2]._id}/likes`)
+            .set('token', token)
+            .expect(RESPONSE_CODES.UNAUTHORIZED)
+            .expect((res) => {
+                expect(res.body.error).toExist();
+                expect(res.body.error).toInclude(ERRORS.POST_CANNOT_BE_VIEWED.error);
+                expect(res.body.error.code).toBe(ERRORS.POST_CANNOT_BE_VIEWED.error.code);
+                expect(res.body.error.message).toBe(ERRORS.POST_CANNOT_BE_VIEWED.error.message);
+            })
+            .end(done);
+        });
+    });
 });

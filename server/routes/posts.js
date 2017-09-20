@@ -265,8 +265,81 @@ router.get('/:communityId/posts/:postId/comments', authenticate, (req, res) => {
     }
 });
 
+/**
+ * @api {GET} /:communityId/posts/:postId/likes Returns likes of a post by its ID
+ * @apiGroup Posts
+ * @apiVersion 2.0.0
+ * @apiName DisplayLikesByPostID
+ * @apiDescription This API returns array of likes of a specific post
+ * @apiHeaderExample {string} Header-Example:
+ * "Content-Type":"application/json"
+ * "token":"TOKEN_GIVEN_WHEN_LOGIN"
+ * @apiSuccess (Success-Response-body) {json} Post ID and Array of likes of that post
+ * @apiSuccessExample {json} Success-Response-Body:
+ * {
+ *  postId: "59c21ca85408cc5ff2948d95"
+ *  "likes": [{
+ *              "likedByName": "John Smith",
+ *              "likedBy": "59c1a54fb64f1b4a5526c524"
+ *          },{
+ *              "likedByName": "Mike Doe",
+ *              "likedBy": "59c1a54fb64f1b4a5526c525"
+ *          }
+ *  ]
+ * }
+ * @apiError (401) {json} INVALID_COMMUNITY_ID INVALID COMMUNITY ID
+ * @apiError (401) {json} INVALID_POST_ID INVALID POST ID
+ * @apiError (401) {json} USER_NOT_JOINED_COMMUNITY USER IS NOT MEMBER OF THE COMMUNITY
+ * @apiError (401) {json} POST_DOES_NOT_EXIST POST DOES NOT EXIST
+ * @apiError (401) {json} POST_CANNOT_BE_VIEWED POST CANNOT BE VIEWED
+ * @apiError (401) {json} NOT_CURRENT_COMMUNITY USER SHOULD SWITCH TO ANOTHER COMMUNITY TO VIEW THE POSTS
+ * @apiError (401) {json} WRONG_TOKEN TOKEN WAS WRONG
+ * @apiError (401) {json} EXPIRED_TOKEN TOKEN WAS EXPIRED
+ * @apiError (404) {json} PAGE_NOT_FOUND check the URL
+ * @apiError (500) {json} NETWROK_ISSUE check the network
+ * 
+ * @apiErrorExample {json} Error-Response-Body:
+ * {
+ *  "error": {
+ *      "code": "SOME_CODE",
+ *      "message": "SOME_MESSAGE"
+ *  }
+ * }
+ */
 router.get('/:communityId/posts/:postId/likes', authenticate, (req, res) => {
-    res.send('Hello POSTS');
+    let communityId = req.params.communityId;
+    let postId = req.params.postId;
+    if(!ObjectID.isValid(communityId)){
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
+    }
+    if(!ObjectID.isValid(postId)){
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_POST_ID);
+    }
+
+    let currentCommunity = tokenUtil.getCurrentCommunityId(req.token);
+    let userCommunities = tokenUtil.getUserCommunities(req.token);
+    if (userCommunities.indexOf(communityId) > -1) {
+        //Means user has joined this community so we need to check if this is his current community
+        if (currentCommunity === communityId) {
+            Post.findById(postId).then((post) => {
+                if(!post){
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_DOES_NOT_EXIST);
+                }
+                if(post.status !== 1){
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);    
+                }
+                return res.send({
+                    postId: post._id,
+                    likes: post.likes
+                });
+            })
+        }else{
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.NOT_CURRENT_COMMUNITY);    
+        }
+    }else{
+        //user does has not joined this community at all
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
+    }
 });
 
 module.exports = router;
