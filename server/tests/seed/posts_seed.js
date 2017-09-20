@@ -7,6 +7,7 @@ const { Post } = require('../../models/post.model');
 
 const postOneId = new ObjectID();
 const postTwoId = new ObjectID();
+const postThreeId = new ObjectID();
 
 const posts = [
     {
@@ -33,7 +34,7 @@ const posts = [
     },
     {
         _id: postTwoId,
-        description: 'Second ost done by someone',
+        description: 'Second post done by someone',
         images: [],
         postedBy: users[1]._id,
         status: 1,
@@ -52,12 +53,34 @@ const posts = [
             likedBy: users[1]._id
         }    
         ]
+    },
+    {
+        _id: postThreeId,
+        description: 'Third post done by someone',
+        images: [],
+        postedBy: users[1]._id,
+        status: 2,
+        community: communities[0]._id,
+        comments: [{
+            comment: 'First Comment, It is an interesting third post',
+            commentDate: new Date(),
+            commentedBy: users[1]._id
+        }, {
+            comment: 'Second Comment, It is an interesting third post',
+            commentDate: new Date(),
+            commentedBy: users[1]._id
+        }],
+        likes: [{
+            likedByName: 'John Smith',
+            likedBy: users[1]._id
+        }    
+        ]
     }
 ];
 
 //First add the post IDs to the a community document
 const addPostsToCommunity = () => {
-    let postIds = [postOneId, postTwoId];
+    let postIds = [postOneId, postTwoId, postThreeId];
     return Community.findByIdAndUpdate(communities[0]._id, {
         $pushAll: {
             posts: postIds
@@ -70,9 +93,10 @@ const addPostsToCommunity = () => {
 const addPosts = () => {
     let postOne = new Post(posts[0]).save();
     let postTwo = new Post(posts[1]).save();
+    let postThree = new Post(posts[2]).save();
 
     Post.remove({}).then( () => {
-        return Promise.all([postOne, postTwo]);
+        return Promise.all([postOne, postTwo, postThree]);
     })
 };
 

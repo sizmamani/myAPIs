@@ -88,7 +88,8 @@ router.get('/:communityId/posts', authenticate, (req, res) => {
         //Means user has joined this community so we need to check if this is his current community
         if (currentCommunity === communityId) {
             Post.find({
-                community: communityId
+                community: communityId,
+                status: 1
             }).then((posts) => {
                 return res.send({posts});
             })
@@ -102,7 +103,36 @@ router.get('/:communityId/posts', authenticate, (req, res) => {
 });
 
 router.get('/:communityId/posts/:postId', authenticate, (req, res) => {
-    res.send('Hello POSTS');
+    let communityId = req.params.communityId;
+    let postId = req.params.postId;
+    if(!ObjectID.isValid(communityId)){
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_COMMUNITY_ID);
+    }
+    if(!ObjectID.isValid(postId)){
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.INVALID_POST_ID);
+    }
+
+    let currentCommunity = tokenUtil.getCurrentCommunityId(req.token);
+    let userCommunities = tokenUtil.getUserCommunities(req.token);
+    if (userCommunities.indexOf(communityId) > -1) {
+        //Means user has joined this community so we need to check if this is his current community
+        if (currentCommunity === communityId) {
+            Post.findById(postId).then((post) => {
+                if(!post){
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_DOES_NOT_EXIST);
+                }
+                if(post.status !== 1){
+                    return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.POST_CANNOT_BE_VIEWED);    
+                }
+                return res.send({post});
+            })
+        }else{
+            return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);    
+        }
+    }else{
+        //user does has not joined this community at all
+        return res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
+    }
 });
 
 router.get('/:communityId/posts/:postId/comments', authenticate, (req, res) => {

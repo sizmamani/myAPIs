@@ -75,5 +75,121 @@ describe('COMMUNITY POSTS TEST', () => {
                 })
                 .end(done);
         });
+
+        it('should not list the posts with status other than 1 (1 means active)', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/${communities[0]._id}/posts`)
+                .set('token', token)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body).toExist();
+                    expect(res.body.posts).toExist();
+                    expect(res.body.posts.length).toBe(2);
+                })
+                .end(done);
+        });
+    });
+
+
+
+    describe('GET /communities/:communityId/posts/:postId', () => {
+        it('should return a specific post by its ID', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/${communities[0]._id}/posts/${posts[0]._id}`)
+                .set('token', token)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body).toExist();
+                    expect(res.body.post).toExist();
+                    expect(res.body.post.description).toBe(posts[0].description);
+                    expect(res.body.post.community).toEqual(posts[0].community);
+                    expect(res.body.post.status).toBe(1);
+                })
+                .end(done);
+        });
+        it('should not return a post if postId is not valid', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[1]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/${communities[0]._id}/posts/1234`)
+                .set('token', token)
+                .expect(RESPONSE_CODES.UNAUTHORIZED)
+                .expect((res) => {
+                    expect(res.body.error).toExist();
+                    expect(res.body.error).toInclude(ERRORS.INVALID_POST_ID.error);
+                    expect(res.body.error.code).toBe(ERRORS.INVALID_POST_ID.error.code);
+                    expect(res.body.error.message).toBe(ERRORS.INVALID_POST_ID.error.message);
+                })
+                .end(done);
+        });
+        it('should not return a post if post does not exist', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/${communities[0]._id}/posts/${new ObjectID()}`)
+                .set('token', token)
+                .expect(RESPONSE_CODES.UNAUTHORIZED)
+                .expect((res) => {
+                    expect(res.body.error).toExist();
+                    expect(res.body.error).toInclude(ERRORS.POST_DOES_NOT_EXIST.error);
+                    expect(res.body.error.code).toBe(ERRORS.POST_DOES_NOT_EXIST.error.code);
+                    expect(res.body.error.message).toBe(ERRORS.POST_DOES_NOT_EXIST.error.message);
+                })
+                .end(done);
+        });
+        it('should not return a post of post exists but status is not 1', (done) => {
+            user = _.omit(users[1], ['password']);
+            user.communities = [];
+            user.communities.push(communities[0]._id);
+            user.communities.push(communities[1]._id);
+            user.currentCommunity = communities[0]._id;
+            let data = {
+                user
+            };
+            let token = tokenUtil.generateToken(data);
+            request(app)
+                .get(`${URL}/${communities[0]._id}/posts/${posts[2]._id}`)
+                .set('token', token)
+                .expect(RESPONSE_CODES.UNAUTHORIZED)
+                .expect((res) => {
+                    expect(res.body.error).toExist();
+                    expect(res.body.error).toInclude(ERRORS.POST_CANNOT_BE_VIEWED.error);
+                    expect(res.body.error.code).toBe(ERRORS.POST_CANNOT_BE_VIEWED.error.code);
+                    expect(res.body.error.message).toBe(ERRORS.POST_CANNOT_BE_VIEWED.error.message);
+                })
+                .end(done);
+        });
     });
 });
