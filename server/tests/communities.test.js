@@ -54,6 +54,8 @@ describe('COMMUNITIES TEST', () => {
         });
 
     });
+
+
     describe('GET /communities/:id/join', () => {
         user = _.omit(users[0], ['password']);
         let data = {
@@ -173,6 +175,8 @@ describe('COMMUNITIES TEST', () => {
                 .end(done);
         });
     });
+
+
     describe('GET /communities/mine', () => {
         user = _.omit(users[0], ['password']);
         let data = {
@@ -207,9 +211,12 @@ describe('COMMUNITIES TEST', () => {
                 .end(done);
         });
     });
+
+    
     describe('GET /communities/current', () => {
         it('should return one community which user is already in', (done) => {
             user = _.omit(users[1], ['password']);
+            user.currentCommunity = user.communities[0];
             let data = {
                 user
             };
@@ -220,7 +227,6 @@ describe('COMMUNITIES TEST', () => {
                 .expect(200)
                 .expect((res) => {
                     expect(res.body.currentCommunity).toExist();
-                    
                     expect(res.body.currentCommunity._id).toEqual(user.communities[0]);
                 })
                 .end(done);
@@ -264,14 +270,7 @@ describe('COMMUNITIES TEST', () => {
         });
     });
 
-
-
-
-
-
-
-
-
+    
     describe('GET /communities/switch/:id', () => {
         it('should be able to switch to another community', (done) => {
             user = _.omit(users[1], ['password']);

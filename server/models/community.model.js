@@ -34,21 +34,8 @@ let CommunitySchema = new mongoose.Schema({
     },
     posts: [
         {
-            description: {
-                type: String
-            },
-            images: {
-                type: Array
-            },
-            postedBy: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'User'
-            },
-            postedDate: {
-                type: Date,
-                default: Date.now
-            },
-            status: Number
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Post'
         }
     ],
     notices: {

@@ -1,8 +1,6 @@
 const express = require('express');
-const validator = require('validator');
 const _ = require('lodash');
 const { ObjectID } = require('mongodb');
-const { mongoose } = require('../db/mongoose.js');
 const { User } = require('../models/user.model');
 const { RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
 const { authenticate } = require('../middlewares/authenticate');

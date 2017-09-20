@@ -1,8 +1,6 @@
 const express = require('express');
-const validator = require('validator');
 const _ = require('lodash');
 const { ObjectID } = require('mongodb');
-const { mongoose } = require('../db/mongoose.js');
 const { Community } = require('../models/community.model');
 const { User } = require('../models/user.model');
 const { RESPONSE_CODES, ERRORS, MESSAGES } = require('../utils/message.util');
@@ -242,11 +240,6 @@ router.get('/switch/:id', authenticate, async (req, res) => {
     }else{
         res.status(RESPONSE_CODES.UNAUTHORIZED).send(ERRORS.USER_NOT_JOINED_COMMUNITY);
     }
-
-
-
-
-    
 });
 
 /**

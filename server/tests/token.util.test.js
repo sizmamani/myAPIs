@@ -72,4 +72,17 @@ describe('TOKEN UTILS TEST', () => {
             .toEqual(data.user.currentCommunity);
     });
 
+    it('should successfully get user communities array from a token', () => {
+        data.user.communities = [];
+        let communityId1 = new ObjectID();
+        let communityId2 = new ObjectID();
+        data.user.communities.push(communityId1, communityId2);
+        let token = tokenUtil.generateToken(data);
+        let userCommunities = tokenUtil.getUserCommunities(token);
+        expect(userCommunities.length).toBeA('number');
+        expect(userCommunities.length).toBe(2);
+        expect(userCommunities[0]).toEqual(data.user.communities[0]);
+        expect(userCommunities[1]).toEqual(data.user.communities[1]);
+    });
+
 });

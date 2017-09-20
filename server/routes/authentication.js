@@ -65,12 +65,21 @@ passport.use(new fbStrategy({
  *      "_id": "59a3699ff3517345c03faddf",
  *      "firstName": "John",
  *      "lastName": "Smith",
- *      "loginId": "john-smith@test.com"
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
  *  },
  *  "communities": [{
- *      //USER'S FIRTS COMMUNITY
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
  *  }, {
- *      //USER'S SECOND COMMUNITY
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
  *  }]
  * }
  * @apiSuccessExample {string} Success-Response-Header:
@@ -186,12 +195,24 @@ router.post('/forgot-password', (req, res) => {
  * @apiSuccessExample {json} Success-Response-Body:
  * {
  *  "user": {
- *      //LOGGED IN USER DETAILS
- *      },
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
+ *  },
  *  "communities": [{
- *      //USER'S FIRTS COMMUNITY
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
  *  }, {
- *      //USER'S SECOND COMMUNITY
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
  *  }]
  * }
  * @apiSuccessExample {string} Success-Response-Header:
@@ -258,12 +279,24 @@ router.post('/signup', async (req, res) => {
  * @apiSuccessExample {json} Success-Response-Body:
  * {
  *  "user": {
- *      //LOGGED IN USER DETAILS
- *      },
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
+ *  },
  *  "communities": [{
- *      //USER'S FIRTS COMMUNITY
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
  *  }, {
- *      //USER'S SECOND COMMUNITY
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
  *  }]
  * }
  * @apiSuccessExample {string} Success-Response-Header:
@@ -293,14 +326,25 @@ router.get('/login/google', passport.authenticate('google', { scope: google.scop
  * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
  * @apiSuccessExample {json} Success-Response-Body:
  * {
- *  //If user already exists in our system
  *  "user": {
- *      //LOGGED IN USER DETAILS
- *      },
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
+ *  },
  *  "communities": [{
- *      //USER'S FIRTS COMMUNITY
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
  *  }, {
- *      //USER'S SECOND COMMUNITY
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
  *  }]
  * }
  * @apiSuccessExample {string} Success-Response-Header:
@@ -364,12 +408,24 @@ router.get('/google/callback',
  * @apiSuccessExample {json} Success-Response-Body:
  * {
  *  "user": {
- *      //LOGGED IN USER DETAILS
- *      },
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
+ *  },
  *  "communities": [{
- *      //USER'S FIRTS COMMUNITY
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
  *  }, {
- *      //USER'S SECOND COMMUNITY
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
  *  }]
  * }
  * @apiSuccessExample {string} Success-Response-Header:
@@ -399,14 +455,25 @@ router.get('/login/facebook', passport.authenticate('facebook'));
  * @apiSuccess (Success-Response-header) {string} token is returned in hte respons header
  * @apiSuccessExample {json} Success-Response-Body:
  * {
- *  //If user already exists in our system
  *  "user": {
- *      //LOGGED IN USER DETAILS
- *      },
+ *      "_id": "59a3699ff3517345c03faddf",
+ *      "firstName": "John",
+ *      "lastName": "Smith",
+ *      "loginId": "john-smith@test.com",
+ *      "currentCommunity": "56a3699tt3567845c03fadd6"
+ *  },
  *  "communities": [{
- *      //USER'S FIRTS COMMUNITY
+ *      "communityName": "Community A",
+ *      "communityDescription": "This is Community A",
+ *      "status": 1,
+ *      "longitude": "-78.016375",
+ *      "latitude": "37.8829024"
  *  }, {
- *      //USER'S SECOND COMMUNITY
+ *      "communityName": "Community B",
+ *      "communityDescription": "This is Community B",
+ *      "status": 1,
+ *      "longitude": "-77.016375",
+ *      "latitude": "38.8829024"
  *  }]
  * }
  * @apiSuccessExample {string} Success-Response-Header:
